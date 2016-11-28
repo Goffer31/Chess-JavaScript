@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
-  <title>JS Bin</title>
+  <title>Szachy w wykonaniu Goffera!</title>
 </head>
 <body>
   <h2 id="ktoryGracz"></h2>
@@ -16,6 +16,7 @@ img.src = "http://userpages.umbc.edu/~mcdo/486/pieces.png";
 <div>
   <input type="button" onclick="wykonaj()" id="btn_rozpocznij" value="Rozpocznij grę"></input>
 </div>
+  <div id="game_over"></div>
 <canvas id="szachownica"/>
 
 <script>
@@ -54,14 +55,14 @@ function dragPiece(x,y)
       if(chessPiece[pieceI].checkIfPossible(x_out,y_out))
         {
           var check = chessPiece[pieceI].checkForCollission(x_out,y_out);
-          if(check[0] === "none")
+          if(check[0] === "none" && (chessPiece[pieceI].type !== "Pawn" || chessPiece[pieceI].type === "Pawn" && pawnDir === "straight"))
           {
             chessPiece[pieceI].x = getX(x_out);
             chessPiece[pieceI].y = getY(y_out);
             gracz = gracz%2+1;
             ktoryGracz.innerHTML = "Ruch wykonuje gracz nr " + gracz;
           }
-          else if(check[0] === "different color")
+          else if(check[0] === "different color" && chessPiece[pieceI].type !== "Pawn" || (check[0] === "different color" && chessPiece[pieceI].type === "Pawn" && pawnDir === "hit"))
           {
             if(chessPiece[check[1]].color === "White")
             {
@@ -73,11 +74,18 @@ function dragPiece(x,y)
               chessPiece[check[1]].x = getX(xPlayer2++);
               chessPiece[check[1]].y = getY(0);                
             }
+
             chessPiece[pieceI].x = getX(x_out);
             chessPiece[pieceI].y = getY(y_out);
             gracz = gracz%2+1;
-            ktoryGracz.innerHTML = "Ruch wykonuje gracz nr " + gracz;
 
+            ktoryGracz.innerHTML = "Ruch wykonuje gracz nr " + gracz;
+            if(chessPiece[check[1]].type === "King")
+              {
+                var koniec = document.getElementById("ktoryGracz");
+                koniec.innerHTML = "Koniec gry, wygrał gracz "+gracz;
+                gracz = 10;
+              }
           }
       drawChessBoard();
         }
@@ -235,9 +243,19 @@ function Piece(x,y,type,color,i)
       console.log(posY + " " + y_out);
       if(posX === x_out && posY === y_out - direction)
         {
+          pawnDir = "straight";
           return true;
         }
-      else return false;
+      else if((posX === x_out - 1 || posX === x_out + 1) && posY === y_out - direction)
+        {
+          pawnDir = "hit";
+          return true;
+        }
+      else 
+      {
+        pawnDir = "";
+        return false;
+      }
     }
     if(this.type === "Knight")
       {
@@ -538,6 +556,7 @@ canvas.addEventListener('mouseup', function(evt) {
 generatePieces();
 drawChessBoard();
 }
+var pawnDir = "";
 var gracz = 1;
 var drag = false;
 var width = 480/6;
